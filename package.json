@@ -1,0 +1,39 @@
+{
+  "name": "reception-report-generator",
+  "version": "2026.11.12",
+  "description": "ブラウザ上で簡単にラジオ・テレビ放送局向けの受信報告書・ベリカード用などの書式を作成できる無料のオンラインツールです。放送局への受信報告のお供にどうぞ！PCはもちろん！スマホからの作成にも対応しています！",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write \"**/*.{html,css,js,json}\"",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shikuichi/ReceptionReportGenerator.git"
+  },
+  "keywords": [
+    "bcl",
+    "ham-radio",
+    "reception-report",
+    "vericard",
+    "qsl",
+    "sinpo",
+    "generator"
+  ],
+  "author": "しくいち",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/shikuichi/ReceptionReportGenerator/issues"
+  },
+  "homepage": "https://shikuichi.github.io/ReceptionReportGenerator/",
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "gh-pages": "^6.1.1",
+    "prettier": "^3.3.0",
+    "vite": "^5.3.0"
+  }
+}

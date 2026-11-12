@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<!--
+作品名：受信報告書ジェネレーター
+作者 ：しくいち (Shikuichi)
+著作権：Copyright (C) 2016-2026 しくいちの散歩道
+Version: 2026-11-12
+
+【ライセンスおよび利用条件について】
+このプログラムはフリーソフトウェアです。あなたは、フリーソフトウェア財団が発行した 
+GNU 一般公衆利用許諾書（バージョン3、またはそれ以降のライセンス）の定める条件の下で、このプログラムを再頒布または改変することができます。
+作者のスタンスとして、商用利用・改変・再配布などは、本ライセンスの範囲内において完全にご自由に行っていただいて構いません。
+本プログラムは、有用であることを願って配布されていますが、全くの無保証です。
+市場性および特定の目的に対する適合性についての暗黙の保証もありません。
+ライセンスの全文（公式規定）については、以下のリンク先を各自参照してください。
+
+■ GNU General Public License, version 3 (GPLv3)
+https://www.gnu.org/licenses/gpl-3.0.html
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+For the full text of the license, please refer to:
+https://www.gnu.org/licenses/gpl-3.0.html
+-->
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>受信報告書ジェネレーター</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- ヘッダー -->
+  <header class="no-print bg-amber-theme text-white border-b border-amber-dark sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-0 sm:h-16 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-2">
+      
+      <!-- タイトル -->
+      <div class="text-center sm:text-left shrink-0">
+        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white drop-shadow-sm whitespace-nowrap">受信報告書ジェネレーター</h1>
+        <p class="text-xs text-amber-100 font-medium hidden sm:block">Reception Report Generator</p>
+      </div>
+  
+      <!-- 機能ボタン群 -->
+      <div class="flex items-center justify-center sm:justify-end gap-2 sm:gap-2 w-full sm:w-auto">
+
+        <div class="relative inline-block">
+          <button id="btn-help" type="button" class="hdr-btn-light inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-xs rounded-md transition whitespace-nowrap" title="使い方ヘルプ">
+            <svg class="w-4 h-4 text-amber-600 sm:mr-1.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+            <span class="hidden sm:inline">使い方</span>
+          </button>
+          <div id="tip-help" class="mobile-tip hidden sm:hidden">使い方</div>
+        </div>
+
+        <!-- サンプルデータ -->
+        <div class="relative inline-block">
+          <button id="btn-load-sample" class="hdr-btn-light inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-xs rounded-md transition whitespace-nowrap" title="サンプルデータ">
+            <svg class="w-4 h-4 text-amber-600 sm:mr-1.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span class="hidden sm:inline">サンプルデータ</span>
+          </button>
+          <div id="tip-sample" class="mobile-tip hidden sm:hidden">サンプルデータ</div>
+        </div>
+  
+        <!-- 入力情報の保存 ドロップダウンメニュー -->
+        <div class="relative inline-block">
+          <button id="btn-export-toggle" class="hdr-btn-light inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-xs rounded-md transition whitespace-nowrap" title="入力情報の保存">
+            <svg class="w-4 h-4 text-emerald-600 sm:mr-1.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span class="hidden sm:inline">入力情報の保存</span>
+            <svg class="w-3.5 h-3.5 ml-1 text-amber-900 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="tip-export" class="mobile-tip hidden sm:hidden">入力情報の保存</div>
+          <div id="export-menu" class="hidden absolute mobile-menu-popup sm:right-0 sm:left-auto mt-1.5 w-44 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 text-left">
+            <button id="btn-export-all" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-theme flex items-center font-medium">
+              <svg class="w-4 h-4 mr-2 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              全データを保存
+            </button>
+            <button id="btn-export-sender" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-theme flex items-center font-medium">
+              <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+              リスナー情報のみ保存
+            </button>
+          </div>
+        </div>
+  
+        <!-- 入力情報の読込 ドロップダウンメニュー -->
+        <div class="relative inline-block">
+          <button id="btn-import-toggle" class="hdr-btn-light inline-flex items-center justify-center p-2 sm:px-3 sm:py-1.5 text-xs rounded-md transition whitespace-nowrap" title="入力情報の読込">
+            <svg class="w-4 h-4 text-amber-600 sm:mr-1.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span class="hidden sm:inline">入力情報の読込</span>
+            <svg class="w-3.5 h-3.5 ml-1 text-amber-900 shrink-0 hidden sm:inline-block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div id="tip-import" class="mobile-tip hidden sm:hidden">入力情報の読込</div>
+          <div id="import-menu" class="hidden absolute mobile-menu-popup sm:right-0 sm:left-auto mt-1.5 w-48 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 text-left">
+            <button id="btn-trigger-import-all" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-theme flex items-center font-medium">
+              <svg class="w-4 h-4 mr-2 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              全データを読込
+            </button>
+            <button id="btn-trigger-import-sender" class="w-full text-left px-3 py-2 text-xs text-slate-700 hover:bg-amber-50 hover:text-amber-theme flex items-center font-medium">
+              <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+                リスナー情報のみ読込
+            </button>
+          </div>
+          <input type="file" id="input-import-all" accept=".json" class="hidden">
+          <input type="file" id="input-import-sender" accept=".json" class="hidden">
+        </div>
+  
+        <!-- 印刷・PDF出力ボタン -->
+        <button id="btn-print" class="hdr-btn-primary inline-flex items-center justify-center px-3 py-2 sm:px-4 sm:py-1.5 text-xs rounded-md transition whitespace-nowrap" title="印刷 / PDF出力">
+          <svg class="w-4 h-4 text-amber-200 mr-1.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          <span>印刷 / PDF出力</span>
+        </button>
+  
+      </div>
+  
+  </div>
+  </header>
+
+  <!-- モバイル用 ナビゲーションタブ -->
+  <div class="no-print lg:hidden bg-white border-b border-slate-200 sticky top-16 z-20 shadow-sm">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 text-center">
+      <button id="tab-form-btn" class="py-3 text-xs font-bold border-b-2 border-amber-theme text-amber-theme flex items-center justify-center transition">
+        <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        入力フォーム
+      </button>
+      <button id="tab-preview-btn" class="py-3 text-xs font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+        <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        プレビュー確認
+      </button>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast" class="no-print fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl flex items-center space-x-2 text-sm border border-slate-700">
+    <span id="toast-icon-wrap" class="shrink-0"></span>
+    <span id="toast-message">メッセージ</span>
+  </div>
+
+  <!-- メインエリア -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- 入力フォーム -->
+      <div id="form-container" class="no-print lg:col-span-5 space-y-5">
+        
+        <!-- 表記言語 & 設定バー -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <span class="text-xs font-bold text-slate-700 flex items-center uppercase tracking-wider">
+              <svg class="w-4 h-4 mr-1.5 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              報告書の表記言語
+            </span>
+            <div class="flex items-center space-x-2">
+              <span id="autosave-indicator" class="text-xs text-slate-400 flex items-center">
+                <svg class="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <span>自動保存</span>
+              </span>
+              <button id="btn-reset-form" class="text-xs text-rose-500 hover:text-rose-700 font-medium px-2 py-0.5 rounded hover:bg-rose-50 transition">
+                入力内容を全削除
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <label for="report_lang_ja" class="cursor-pointer">
+              <input type="radio" id="report_lang_ja" name="report_lang" value="ja" class="peer sr-only" checked>
+              <div class="p-2.5 border-2 border-slate-200 rounded-lg text-center peer-checked:border-amber-theme peer-checked:bg-amber-50 transition font-medium text-xs text-slate-700 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-amber-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+                <span>日本語</span>
+              </div>
+            </label>
+            <label for="report_lang_en" class="cursor-pointer">
+              <input type="radio" id="report_lang_en" name="report_lang" value="en" class="peer sr-only">
+              <div class="p-2.5 border-2 border-slate-200 rounded-lg text-center peer-checked:border-amber-theme peer-checked:bg-amber-50 transition font-medium text-xs text-slate-700 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4 text-amber-700 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span>English</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- 宛名設定 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+            宛名書き
+          </h2>
+          <div>
+            <label for="target_station" class="block text-xs font-semibold text-slate-600 mb-1">放送事業者の名称（Broadcasting Company）</label>
+            <input type="text" id="target_station" placeholder="例: XXコミュニティFM株式会社" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="target_department" class="block text-xs font-semibold text-slate-600 mb-1">担当部署・課名（Department / Section）</label>
+            <input type="text" id="target_department" placeholder="例: 送信技術部 / QSL係" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="target_honorific" class="block text-xs font-semibold text-slate-600 mb-1">敬称（Salutation）</label>
+            <input type="text" id="target_honorific" placeholder="御中 / 様" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+        </div>
+
+        <!-- 放送局・周波数情報 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>
+            放送局・周波数・チャンネル
+          </h2>
+
+          <div>
+            <label for="station_name" class="block text-xs font-semibold text-slate-600 mb-1">放送局名 (Station Name) <span class="text-rose-500">*</span></label>
+            <input type="text" id="station_name" required placeholder="例: FM SHIKUICHI" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+
+          <div>
+            <label for="call_sign" class="block text-xs font-semibold text-slate-600 mb-1">コールサイン (Call Sign)</label>
+            <input type="text" id="call_sign" placeholder="例: JOZZ3XX-FM" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme uppercase">
+          </div>
+
+          <!-- 周波数・チャンネル選択 -->
+          <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-3">
+            <div>
+              <span class="block text-xs font-semibold text-slate-700">周波数 / チャンネル（Frequency / Channel） <span class="text-rose-500">*</span></span>
+              <p class="text-[11px] text-slate-500 mt-0.5">受信対象に合わせて単位を選択してください</p>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2">
+              <label for="freq_unit_khz" class="cursor-pointer">
+                <input type="radio" id="freq_unit_khz" name="freq_unit" value="kHz" class="peer sr-only">
+                <div class="py-2 px-1 text-center border rounded-lg bg-white border-slate-200 peer-checked:border-amber-theme peer-checked:bg-amber-50 peer-checked:text-amber-theme font-semibold text-xs text-slate-700 transition shadow-sm">
+                  kHz
+                </div>
+              </label>
+              <label for="freq_unit_mhz" class="cursor-pointer">
+                <input type="radio" id="freq_unit_mhz" name="freq_unit" value="MHz" class="peer sr-only">
+                <div class="py-2 px-1 text-center border rounded-lg bg-white border-slate-200 peer-checked:border-amber-theme peer-checked:bg-amber-50 peer-checked:text-amber-theme font-semibold text-xs text-slate-700 transition shadow-sm">
+                  MHz
+                </div>
+              </label>
+              <label for="freq_unit_ch" class="cursor-pointer">
+                <input type="radio" id="freq_unit_ch" name="freq_unit" value="ch" class="peer sr-only">
+                <div class="py-2 px-1 text-center border rounded-lg bg-white border-slate-200 peer-checked:border-amber-theme peer-checked:bg-amber-50 peer-checked:text-amber-theme font-semibold text-xs text-slate-700 transition shadow-sm">
+                  チャンネル
+                </div>
+              </label>
+            </div>
+
+            <!-- kHz / MHz -->
+            <div id="freq-input-group" class="flex items-center space-x-2 pt-1">
+              <label for="frequency_val" class="sr-only">周波数 (Frequency）</label>
+              <input type="text" id="frequency_val" required placeholder="例: 88.3 や 1530" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme bg-white">
+              <span id="freq-unit-label" class="text-xs font-bold text-slate-600 px-3 py-2 bg-slate-200 rounded-lg min-w-[60px] text-center shrink-0">MHz</span>
+            </div>
+
+            <!-- チャンネル -->
+            <div id="ch-input-group" class="hidden pt-1">
+              <label for="channel_val" class="sr-only">チャンネル（Channel）</label>
+              <input type="text" id="channel_val" placeholder="例: 21, UHF 34, 等" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme bg-white">
+              <p class="text-[11px] text-slate-500 mt-1">※受信評価にテレビ用（P/Q評価）が選択されました。</p>
+            </div>
+          </div>
+
+          <div>
+            <label for="program_title" class="block text-xs font-semibold text-slate-600 mb-1">番組名 (Program Title)</label>
+            <input type="text" id="program_title" placeholder="例: 第◯◯回お祭り特別生放送" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+
+          <div>
+            <label for="language" class="block text-xs font-semibold text-slate-600 mb-1">放送言語 (Language)</label>
+            <input type="text" id="language" placeholder="例: 日本語 / English" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+        </div>
+
+        <!-- 受信日時 & 受信場所 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            受信日時・受信場所
+          </h2>
+
+          <div>
+            <label for="reception_date" class="block text-xs font-semibold text-slate-600 mb-1">受信日（Date Received） <span class="text-rose-500">*</span></label>
+            <input type="date" id="reception_date" required class="w-full max-w-full min-w-0 text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme bg-white">
+          </div>
+
+          <!-- 開始日時・終了日時 -->
+          <div class="space-y-3">
+            <div>
+              <label for="time_start" class="block text-xs font-semibold text-slate-600 mb-1">開始時刻（Start Time） <span class="text-rose-500">*</span></label>
+              <input type="time" id="time_start" required class="w-full max-w-full min-w-0 text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme bg-white">
+            </div>
+            <div>
+              <label for="time_end" class="block text-xs font-semibold text-slate-600 mb-1">終了時刻（End Time） <span class="text-rose-500">*</span></label>
+              <input type="time" id="time_end" required class="w-full max-w-full min-w-0 text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme bg-white">
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-4 text-xs font-medium text-slate-700 pt-1">
+            <span class="text-slate-500">時刻基準:</span>
+            <label for="tz_jst" class="inline-flex items-center cursor-pointer">
+              <input type="radio" id="tz_jst" name="time_zone_type" value="JST" class="accent-amber-theme" checked>
+              <span class="ml-1">日本標準時 (JST)</span>
+            </label>
+            <label for="tz_utc" class="inline-flex items-center cursor-pointer">
+              <input type="radio" id="tz_utc" name="time_zone_type" value="UTC" class="accent-amber-theme">
+              <span class="ml-1">協定世界時 (UTC)</span>
+            </label>
+          </div>
+
+          <div>
+            <label for="reception_place" class="block text-xs font-semibold text-slate-600 mb-1">受信場所 (Location) <span class="text-rose-500">*</span></label>
+            <input type="text" id="reception_place" required placeholder="例: 東京都港区愛宕2丁目1-1（愛宕山）" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+        </div>
+
+        <!-- 受信状態・信号評価 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h2 class="text-sm font-bold text-slate-800 flex items-center">
+              <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
+              受信状態・信号評価 <span class="text-rose-500 ml-1">*</span>
+            </h2>
+            <span id="eval-code-preview" class="px-2.5 py-0.5 text-xs font-mono font-bold bg-amber-100 text-amber-theme-dark rounded border border-amber-200">
+              -
+            </span>
+          </div>
+
+          <!-- ラジオ用 SINPO (1〜5) -->
+          <div id="sinpo-container" class="space-y-2">
+            <p class="text-[11px] text-slate-500">各項目を1(極悪)〜5(極めて良好)で指定してください。<br>(Please rate each item on a scale of 1 (Very Poor) to 5 (Excellent).)</p>
+            <div class="grid grid-cols-5 gap-1.5 text-center">
+              <div>
+                <label for="sinpo_s" class="block text-xs font-bold text-slate-700 mb-1">S <span class="font-normal text-[10px] block text-slate-500">強度</span></label>
+                <select id="sinpo_s" class="w-full text-sm font-mono border rounded p-1 bg-slate-50 text-center font-bold">
+                  <option value="" hidden disabled selected>-</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option>
+                </select>
+              </div>
+              <div>
+                <label for="sinpo_i" class="block text-xs font-bold text-slate-700 mb-1">I <span class="font-normal text-[10px] block text-slate-500">混信</span></label>
+                <select id="sinpo_i" class="w-full text-sm font-mono border rounded p-1 bg-slate-50 text-center font-bold">
+                  <option value="" hidden disabled selected>-</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option>
+                </select>
+              </div>
+              <div>
+                <label for="sinpo_n" class="block text-xs font-bold text-slate-700 mb-1">N <span class="font-normal text-[10px] block text-slate-500">雑音</span></label>
+                <select id="sinpo_n" class="w-full text-sm font-mono border rounded p-1 bg-slate-50 text-center font-bold">
+                  <option value="" hidden disabled selected>-</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option>
+                </select>
+              </div>
+              <div>
+                <label for="sinpo_p" class="block text-xs font-bold text-slate-700 mb-1">P <span class="font-normal text-[10px] block text-slate-500">伝播</span></label>
+                <select id="sinpo_p" class="w-full text-sm font-mono border rounded p-1 bg-slate-50 text-center font-bold">
+                  <option value="" hidden disabled selected>-</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option>
+                </select>
+              </div>
+              <div>
+                <label for="sinpo_o" class="block text-xs font-bold text-slate-700 mb-1">O <span class="font-normal text-[10px] block text-slate-500">総合</span></label>
+                <select id="sinpo_o" class="w-full text-sm font-mono border rounded p-1 bg-slate-50 text-center font-bold">
+                  <option value="" hidden disabled selected>-</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- テレビ用 P/Q評価 -->
+          <div id="tv-eval-container" class="hidden space-y-2">
+            <p class="text-[11px] text-slate-500">映像(Picture)と音声(Quality)の評価を選択してください。<br>(Picture & Audio Quality Evaluation)</p>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="tv_picture" class="block text-xs font-semibold text-slate-600 mb-1">映像 (Picture: P1〜P5)</label>
+                <select id="tv_picture" class="w-full text-xs border rounded p-2 bg-slate-50">
+                  <option value="P5 (鮮明・乱れなし / Excellent)" selected>P5 : 鮮明・乱れなし</option>
+                  <option value="P4 (良好・微小な乱れ / Good)">P4 : 良好・微細な乱れ</option>
+                  <option value="P3 (実用可能・時々ブロック / Fair)">P3 : 実用可能</option>
+                  <option value="P2 (不良・静止画面 / Poor)">P2 : 不良</option>
+                  <option value="P1 (受信不能 / Unusable)">P1 : 受信不能</option>
+                </select>
+              </div>
+              <div>
+                <label for="tv_sound" class="block text-xs font-semibold text-slate-600 mb-1">音声 (Sound: Q1〜Q5)</label>
+                <select id="tv_sound" class="w-full text-xs border rounded p-2 bg-slate-50">
+                  <option value="Q5 (明瞭・雑音なし / Excellent)" selected>Q5 : 明瞭・雑音なし</option>
+                  <option value="Q4 (良好・微小な雑音 / Good)">Q4 : 良好</option>
+                  <option value="Q3 (実用可能・聞き取れる / Fair)">Q3 : 実用可能</option>
+                  <option value="Q2 (不良・音途切れ大 / Poor)">Q2 : 不良</option>
+                  <option value="Q1 (聴取不能 / Unusable)">Q1 : 聴取不能</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 受信設備 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="15" x2="23" y2="15"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="15" x2="4" y2="15"/></svg>
+            受信設備 <span class="text-rose-500 ml-1">*</span>
+          </h2>
+          <div>
+            <label for="receiver_model" class="block text-xs font-semibold text-slate-600 mb-1">受信機 / チューナー (Receiver / Tuner) <span class="text-rose-500">*</span></label>
+            <input type="text" id="receiver_model" required placeholder="例: PL-398MP" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="antenna_model" class="block text-xs font-semibold text-slate-600 mb-1">アンテナ (Antenna)</label>
+            <input type="text" id="antenna_model" placeholder="例: 標準ロッドアンテナ" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+        </div>
+
+        <!-- 受信内容 & 番組の感想 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            放送内容・番組の感想
+          </h2>
+          <div>
+            <label for="program_log" class="block text-xs font-semibold text-slate-600 mb-1">放送内容 (時系列の番組内容)<br>(Program Content (Chronological)) <span class="text-rose-500">*</span></label>
+            <textarea id="program_log" required rows="8" placeholder="11:00 番組開始ジングル、挨拶&#10;11:15 音楽オンエア&#10;12:00 正午の時報、天気予報..." class="w-full text-xs font-mono px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme leading-relaxed"></textarea>
+          </div>
+          <div>
+            <label for="comments" class="block text-xs font-semibold text-slate-600 mb-1">番組への感想・メッセージ<br>(Program Feedback / Messages)</label>
+            <textarea id="comments" rows="8" placeholder="番組やパーソナリティへの感想をご記入ください" class="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme"></textarea>
+          </div>
+          <div class="pt-2">
+            <label for="qsl_request" class="block text-xs font-semibold text-slate-600 mb-1">ベリカード（受信確認証）発行のお願い文<br>(Reception Report and Request for QSL Card)</label>
+            <textarea id="qsl_request" rows="8" class="w-full text-xs px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme"></textarea>
+          </div>
+          <div class="flex items-center pt-1">
+            <input type="checkbox" id="include_return_postage" class="rounded accent-amber-theme w-4 h-4" checked>
+            <label for="include_return_postage" class="ml-2 text-xs font-medium text-slate-700">返信用封筒（切手貼付済）同封の注記を記載する<br>(A self-addressed stamped envelope (SASE) is enclosed for your reply.)</label>
+          </div>
+        </div>
+
+        <!-- リスナー情報 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h2 class="text-sm font-bold text-slate-800 flex items-center border-b pb-2">
+            <svg class="w-4 h-4 mr-2 text-amber-theme shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            リスナー情報
+          </h2>
+          <div>
+            <label for="sender_name" class="block text-xs font-semibold text-slate-600 mb-1">氏名 (Your Name)</label>
+            <input type="text" id="sender_name" placeholder="例: 電波 太郎" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="sender_zip" class="block text-xs font-semibold text-slate-600 mb-1">郵便番号 (Zip Code)</label>
+            <input type="text" id="sender_zip" placeholder="例: 105-0002" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="sender_address" class="block text-xs font-semibold text-slate-600 mb-1">住所 （Address）</label>
+            <input type="text" id="sender_address" placeholder="例: 東京都港区愛宕2丁目1-1" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+          <div>
+            <label for="sender_email" class="block text-xs font-semibold text-slate-600 mb-1">連絡先 (E-Mail / Telephone)</label>
+            <input type="text" id="sender_email" placeholder="例: denpa.taro@example.com" class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-theme">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- リアルタイムプレビュー -->
+      <div id="print-area" class="hidden lg:block lg:col-span-7 sticky top-20 overflow-x-auto">
+        
+        <!-- プレビューバー -->
+        <div class="no-print flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center space-x-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-slate-700 tracking-wider">印刷プレビュー</span>
+          </div>
+          <span id="page-estimate-badge" class="text-xs font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-700">A4用紙 1枚</span>
+        </div>
+
+        <!-- 印刷用紙本体 -->
+        <div id="reception-sheet" class="a4-sheet text-slate-900 font-serif min-w-[320px]">
+          
+          <!-- 文書タイトル -->
+          <div id="pv-header-block" class="print-keep text-center pb-4 mb-5 border-b-2 border-slate-900">
+            <span id="pv-sub-title" class="text-[11px] font-sans tracking-widest text-slate-500 uppercase block mb-1">Reception Report</span>
+            <h1 id="pv-doc-title" class="text-2xl sm:text-3xl font-bold tracking-widest">受 信 報 告 書</h1>
+          </div>
+
+          <!-- 宛先 & 報告日 & 報告者情報 -->
+          <div id="pv-target-block" class="print-keep flex justify-between items-start mb-5 pb-3 border-b border-dashed border-slate-300 gap-6">
+            <div class="w-3/5 space-y-1 text-slate-900">
+              <div class="text-base sm:text-lg font-bold">
+                <span id="pv-target-station" class="underline decoration-1 underline-offset-4"></span>
+              </div>
+              <div class="text-xs sm:text-sm font-sans text-slate-800 pt-0.5">
+                <span id="pv-target-department">受信報告書 担当者</span>
+                <span id="pv-target-honorific" class="ml-1.5 font-semibold text-slate-900">様</span>
+              </div>
+            </div>
+
+            <div class="w-2/5 text-right space-y-0.5 font-sans">
+              <div class="text-xs"><span id="lbl-report-date">報告日:</span> <span id="pv-report-date" class="font-medium"></span></div>
+              <div class="font-bold text-sm sm:text-base text-slate-900" id="pv-sender-name"></div>
+              <div class="text-slate-600 text-[11px] sm:text-xs" id="pv-sender-zip"></div>
+              <div class="text-slate-600 text-[11px] sm:text-xs leading-normal" id="pv-sender-address"></div>
+              <div class="text-slate-500 text-[11px] sm:text-xs" id="pv-sender-email"></div>
+            </div>
+          </div>
+
+          <!-- 冒頭挨拶文 -->
+          <p id="pv-greeting" class="print-keep text-xs sm:text-sm font-sans leading-relaxed text-slate-700 mb-4">
+            貴局の放送を下記のとおりに受信いたしましたので、ご報告申し上げます。
+          </p>
+
+          <!-- 受信諸元 -->
+          <div id="pv-spec-table" class="print-keep mb-5 overflow-hidden border border-slate-800 rounded-sm">
+            <table class="spec-table w-full border-collapse">
+              <tbody>
+                <tr id="pv-row-station" class="border-b border-slate-300">
+                  <th id="lbl-tbl-station" class="bg-slate-100 font-bold text-left border-r border-slate-300 w-[28%] whitespace-nowrap">放送局名</th>
+                  <td id="pv-tbl-station" class="font-bold font-sans text-sm sm:text-base w-[72%]">-</td>
+                </tr>
+                <tr id="pv-row-callsign" class="border-b border-slate-300">
+                  <th id="lbl-tbl-callsign" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">コールサイン</th>
+                  <td id="pv-tbl-callsign" class="font-mono font-bold text-xs sm:text-sm"></td>
+                </tr>
+                <tr id="pv-row-freq" class="border-b border-slate-300">
+                  <th id="lbl-tbl-freq" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">受信周波数</th>
+                  <td id="pv-tbl-freq" class="font-mono font-bold text-slate-900 text-sm sm:text-base">-</td>
+                </tr>
+                <tr id="pv-row-program" class="border-b border-slate-300">
+                  <th id="lbl-tbl-program" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">番組名</th>
+                  <td id="pv-tbl-program" class="font-sans font-medium text-xs sm:text-sm"></td>
+                </tr>
+                <tr id="pv-row-datetime" class="border-b border-slate-300">
+                  <th id="lbl-tbl-datetime" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">受信日時</th>
+                  <td id="pv-tbl-datetime" class="font-sans text-xs sm:text-sm">-</td>
+                </tr>
+                <tr id="pv-row-location" class="border-b border-slate-300">
+                  <th id="lbl-tbl-location" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">受信場所</th>
+                  <td id="pv-tbl-location" class="font-sans text-xs sm:text-sm">-</td>
+                </tr>
+                <tr id="pv-row-eval" class="border-b border-slate-300">
+                  <th id="lbl-tbl-eval" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">受信状態の評価</th>
+                  <td id="pv-tbl-eval" class="font-mono font-bold text-xs sm:text-sm">-</td>
+                </tr>
+                <tr id="pv-row-equipment">
+                  <th id="lbl-tbl-equipment" class="bg-slate-100 font-bold text-left border-r border-slate-300 whitespace-nowrap">受信機器・アンテナ</th>
+                  <td id="pv-tbl-equipment" class="font-sans text-slate-800 text-xs sm:text-sm">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 放送内容の記録 -->
+          <div id="pv-log-block" class="print-keep mb-4">
+            <h3 id="lbl-log-title" class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 mb-1.5 flex items-center">
+              <span class="inline-block w-2 h-2 bg-slate-900 mr-1.5"></span>
+              放送内容の記録 (Reception Details)
+            </h3>
+            <div id="pv-program-log" class="p-3 sm:p-3.5 bg-slate-50 border border-slate-300 rounded-sm font-sans text-xs sm:text-sm leading-relaxed whitespace-pre-wrap min-h-[120px] text-slate-800">
+              （放送内容は未入力です）
+            </div>
+          </div>
+
+          <!-- 番組への感想 -->
+          <div id="pv-comment-block" class="print-keep mb-4">
+            <h3 id="lbl-comments-title" class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800 mb-1.5 flex items-center">
+              <span class="inline-block w-2 h-2 bg-slate-900 mr-1.5"></span>
+              番組への感想 (Comments)
+            </h3>
+            <div id="pv-comments" class="p-2.5 sm:p-3 bg-slate-50 border border-slate-300 rounded-sm font-sans text-xs sm:text-sm leading-relaxed whitespace-pre-wrap min-h-[45px] text-slate-700">
+            </div>
+          </div>
+
+          <!-- ベリカード請求文 -->
+          <div id="pv-qsl-block" class="print-keep p-3 sm:p-3.5 border border-slate-700 bg-slate-50 rounded-sm text-xs sm:text-sm space-y-1">
+            <p id="pv-qsl-request" class="font-sans leading-relaxed text-slate-800">
+              上記の内容が貴局の放送運行記録と一致しておりましたら、ご多忙中恐縮ではございますが、受信確認証（ベリカード）を1枚ご発行賜りたく存じます。
+            </p>
+            <p id="pv-postage-note" class="font-sans text-[11px] sm:text-xs text-slate-600 font-semibold">
+              ※返信用封筒（切手貼付済）を同封いたしますのでよろしくお願い申し上げます。
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- フッター -->
+  <footer class="no-print site-footer text-center text-[11px]">
+    <div class="max-w-7xl mx-auto px-4 space-y-0.5">
+      <p class="font-medium">&copy;2016-<span id="copyright-year"></span> しくいちの散歩道</p>
+      <p>入力データはお使いのブラウザ内部にのみ安全に保管されます。外部サーバーへの通信は一切行われません。</p>
+    </div>
+  </footer>
+
+  <div id="help-modal" class="no-print hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div id="help-modal-dialog" class="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-2xl max-h-[85dvh] flex flex-col overflow-hidden">
+      
+      <!-- 使い方ヘルプモーダルヘッダー -->
+      <div class="flex items-center justify-between bg-amber-theme text-white shrink-0 gap-4" style="padding: 0.4rem 0.8rem;">
+        <div class="flex items-center space-x-3">
+          <svg class="w-5 h-5 text-amber-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+          <h2 class="text-sm sm:text-base font-bold tracking-tight">受信報告書ジェネレーターの使い方</h2>
+        </div>
+        <button id="btn-close-help-top" type="button" class="p-1.5 rounded-md text-amber-100 hover:text-white hover:bg-amber-dark transition shrink-0" title="閉じる">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- 使い方ヘルプモーダル本文 -->
+      <div class="p-5 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900">
+          <p class="font-bold mb-1">💡 まずは「サンプルデータ」を試してみましょう！</p>
+          <p>ヘッダーの<strong>「サンプルデータ」</strong>ボタンを押すと、記入例が自動で入力されます。どんな形式で作成されるかすぐに確認できます。</p>
+        </div>
+
+        <section class="space-y-1.5">
+          <h3 class="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">1. 作成の基本ステップ</h3>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li><strong>表記言語を選択：</strong>国内局向けの「日本語」または海外局向けの「English」を選びます。</li>
+            <li><strong>放送局・受信情報を入力：</strong><span class="text-rose-500 font-bold">*</span> 印の必須項目を中心に、周波数や受信日時、受信地を入力します。<br />（テレビのチャンネルを選ぶと、自動でテレビ用のP/Q評価に切り替わります）</li>
+            <li><strong>受信状態・番組内容を記録：</strong>SINPOコードや、聴こえた番組の内容（時報・曲名・CM・トーク内容など）を時系列で記入します。</li>
+            <li><strong>印刷 / PDF出力：</strong>内容を確認したら右上の<strong>「印刷 / PDF出力」</strong>ボタンからA4サイズで印刷、またはPDFとして保存します。</li>
+          </ol>
+        </section>
+
+        <section class="space-y-1.5">
+          <h3 class="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">2. スマホでのプレビュー確認</h3>
+          <p>画面幅が狭いスマートフォンでは、ヘッダー下の<strong>「入力フォーム」「プレビュー確認」</strong>タブをタップして表示を切り替えることができます。</p>
+          <p class="text-xs text-slate-600 mt-1">※スマホの画面サイズによってはプレビュー画面のレイアウトが崩れることがあります。</p>
+          <p class="text-xs text-slate-600 mt-1">最終的な仕上がりは、右上の<strong>「印刷 / PDF出力」</strong>ボタンを押してPDF保存（印刷プレビュー）画面から確認してみてください。</p>
+        </section>
+
+        <section class="space-y-1.5">
+          <h3 class="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">3. データの自動保存とファイル出力</h3>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>ブラウザ自動保存：</strong>入力した内容はブラウザ内に自動保存されるため、誤ってページを閉じても続きから再開できます。</li>
+            <li><strong>ファイルに保存：</strong>「入力情報の保存」メニューから自分の住所・氏名・受信機などの入力した情報をJSONファイルに保存できます。</li>
+            <li><strong>ファイルを読込：</strong>「入力情報の保存」から保存した<strong>JSONファイル</strong>を読み込むことができます。</li>
+            <li>※ブラウザキャッシュの削除などを行うと、<strong>「ブラウザ自動保存機能」</strong>で保存されたデータは消えてしまいますので、<strong>JSONファイルでの保存と併用すること</strong>をおすすめします。</li>
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- 使い方ヘルプモーダルフッター -->
+      <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex justify-center shrink-0">
+        <button id="btn-close-help-bottom" type="button" class="px-8 py-2 text-xs font-bold text-white bg-amber-theme hover:bg-amber-dark rounded-md transition shadow-sm">
+          閉じる
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
