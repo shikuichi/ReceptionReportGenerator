@@ -99,24 +99,28 @@ const SENDER_FIELDS = [
 
 ## 3. その他のカスタマイズポイント
 
-### A. ブラウザ自動保存のストレージキー変更
-同じドメイン上で別バージョンのツールを複数運用する場合、データの競合を防ぐために `STORAGE_KEY` を変更してください。
+### A. ブラウザ自動保存のストレージキー・有効期限の変更
+同じドメイン上で別バージョンのツールを複数運用する場合の競合防止（`STORAGE_KEY`）や、自動保存データの保持期間（`STORAGE_EXPIRY_MS`：最終アクセスからの経過時間）を変更できます。
 
 ```javascript
-// 変更前
-const STORAGE_KEY = 'Reception_Report_Generator_Input_Data';
-
-// 変更例
+// ストレージキー（変更例）
 const STORAGE_KEY = 'my_custom_reception_report_v2';
-```
+
+// 保存期間（ミリ秒指定：デフォルトは最終アクセスから7日間）
+const STORAGE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
+
+// 例：30日間に延長したい場合
+const STORAGE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
 
 ### B. サンプルデータ生成の機種リスト追加
-`loadSampleData()` 関数内の配列に機種名を追加すると、ランダム生成される受信機のバリエーションを増やせます。
+`loadSampleData()` 関数内の各放送種別分岐（`community_fm` / `pref_fm` / `mw_am` / テレビ）にある `receiver_model: pick([...])` の配列に機種名を追加すると、ランダム生成される受信機のバリエーションを増やせます。
 
-* `receiversCommunityFm` : コミュニティFM帯域用
-* `receiversPrefWideFm` : 県域FM・ワイドFM帯域用
-* `receiversMwAm` : 中波（AM）帯域用
-* `receiversTv` : 地上デジタルテレビ用
+```javascript
+// 例：コミュニティFM用の受信機リストに追加する場合
+receiver_model: pick([
+  'PL-398MP', 'ICF-SW7600GR', 'XHDATA D-808', 'TECSUN PL-660',
+  'ここに新しい機種名を追加'
+]),
 
 ### C. A4用紙「2枚以上（長文スタイル）」の判定しきい値調整
 `updatePreview()` 関数内の以下の数値を調整することで、長文レイアウト（`multipage-mode` クラス付与）に切り替わるタイミングを変更できます。
