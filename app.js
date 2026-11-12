@@ -44,6 +44,7 @@ const STORAGE_KEY = 'Reception_Report_Generator_Input_Data';
 const STORAGE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 最終アクセスから7日間
 
 let isExplicitResetOrLeave = false;
+let isTemporaryAction = false;
 let isSampleLoaded = false;
 let pendingNavigationUrl = null;
 
@@ -1059,6 +1060,7 @@ if (btnHelp && helpModal) {
 }
 
 function downloadJsonFile(obj, filename) {
+  isTemporaryAction = true;
   const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1068,6 +1070,7 @@ function downloadJsonFile(obj, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  setTimeout(() => { isTemporaryAction = false; }, 1000);
 }
 
 // 全データエクスポート
@@ -1104,19 +1107,23 @@ const inputImportSender = document.getElementById('input-import-sender');
 const btnTriggerImportAll = document.getElementById('btn-trigger-import-all');
 const btnTriggerImportSender = document.getElementById('btn-trigger-import-sender');
 
-if (btnTriggerImportAll && inputImportAll) {
-  btnTriggerImportAll.addEventListener('click', () => {
-    if (importMenu) importMenu.classList.add('hidden');
-    inputImportAll.click();
-  });
+function triggerFileSelect(inputEl) {
+  isTemporaryAction = true;
+  window.addEventListener('focus', () => {
+    setTimeout(() => { isTemporaryAction = false; }, 500);
+  }, { once: true });
+  inputEl.click();
 }
 
-if (btnTriggerImportSender && inputImportSender) {
-  btnTriggerImportSender.addEventListener('click', () => {
-    if (importMenu) importMenu.classList.add('hidden');
-    inputImportSender.click();
-  });
-}
+document.getElementById('btn-trigger-import-all').addEventListener('click', () => {
+  importMenu.classList.add('hidden');
+  triggerFileSelect(inputImportAll);
+});
+
+document.getElementById('btn-trigger-import-sender').addEventListener('click', () => {
+  importMenu.classList.add('hidden');
+  triggerFileSelect(inputImportSender);
+});
 
 function handleFileImport(file, targetFields, successMsg) {
   if (!file) return;
@@ -1285,16 +1292,25 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// ページ内リンク（<a>タグ）クリック時のインターセプト
+// ページ内のリンク（<a>タグ）クリック時のインターセプト
 document.addEventListener('click', (e) => {
   const anchor = e.target.closest('a[href]');
   if (!anchor) return;
 
   const href = anchor.getAttribute('href');
-  if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') {
+  // ページ内アンカー、JavaScript擬似リンク、別タブ、ファイルダウンロード(blob/download属性)は除外
+  if (
+    !href ||
+    href.startsWith('#') ||
+    href.startsWith('javascript:') ||
+    href.startsWith('blob:') ||
+    anchor.hasAttribute('download') ||
+    anchor.target === '_blank'
+  ) {
     return;
   }
 
+  // ローカルストレージに保存データがある、または入力内容がある場合のみ3択モーダルを表示
   const hasSavedData = !!localStorage.getItem(STORAGE_KEY);
   if (hasSavedData || hasFormUserContent()) {
     e.preventDefault();
@@ -1307,7 +1323,7 @@ document.addEventListener('click', (e) => {
 
 // ブラウザの戻る/進む、アドレスバーからの直接移動、タブを閉じる際の離脱警告
 window.addEventListener('beforeunload', (e) => {
-  if (isExplicitResetOrLeave) return;
+  if (isExplicitResetOrLeave || isTemporaryAction) return; // ★変更
 
   const hasSavedData = !!localStorage.getItem(STORAGE_KEY);
   if (hasSavedData || hasFormUserContent()) {
