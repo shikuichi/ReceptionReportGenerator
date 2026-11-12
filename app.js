@@ -41,6 +41,11 @@ const FORM_FIELDS = [
 const SENDER_FIELDS = ['sender_name', 'sender_zip', 'sender_address', 'sender_email', 'receiver_model', 'antenna_model'];
 
 const STORAGE_KEY = 'Reception_Report_Generator_Input_Data';
+const STORAGE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 最終アクセスから7日間
+
+let isExplicitResetOrLeave = false;
+let isSampleLoaded = false;
+let pendingNavigationUrl = null;
 
 // タブ・コンテナ要素
 const tabFormBtn = document.getElementById('tab-form-btn');
@@ -151,7 +156,7 @@ function getFormData() {
   return data;
 }
 
-function setFormData(data, targetFields = FORM_FIELDS) {
+function setFormData(data, targetFields = FORM_FIELDS, shouldSave = true) {
   targetFields.forEach(id => {
     if (data[id] === undefined) return;
 
@@ -174,7 +179,7 @@ function setFormData(data, targetFields = FORM_FIELDS) {
   });
 
   updateUIState();
-  updatePreview();
+  updatePreview(shouldSave);
 }
 
 function updateUIState() {
@@ -229,7 +234,7 @@ function updateUIState() {
   }
 }
 
-function updatePreview() {
+function updatePreview(shouldSave = true) {
   const data = getFormData();
   const isEn = (data.report_lang === 'en');
   const isTV = (data.freq_unit === 'ch');
@@ -503,16 +508,23 @@ function updatePreview() {
     }
   }
 
-  saveToStorage();
+if (shouldSave) {
+    isSampleLoaded = false;
+    saveToStorage();
+  }
 }
 
 let saveTimeout = null;
-function saveToStorage() {
+function saveToStorage(immediate = false) {
   clearTimeout(saveTimeout);
-  saveTimeout = setTimeout(() => {
+  const performSave = () => {
     try {
-      const data = getFormData();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const formData = getFormData();
+      const payload = {
+        lastAccessed: Date.now(),
+        data: formData
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       const ind = document.getElementById('autosave-indicator');
       if (ind) {
         ind.innerHTML = '<svg class="w-3.5 h-3.5 mr-1 text-emerald-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>保存済</span>';
@@ -523,19 +535,52 @@ function saveToStorage() {
     } catch (e) {
       console.error(e);
     }
-  }, 300);
+  };
+
+  if (immediate) {
+    performSave();
+  } else {
+    saveTimeout = setTimeout(performSave, 300);
+  }
+}
+
+function clearStorageData() {
+  clearTimeout(saveTimeout);
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      setFormData(parsed);
-      return true;
+    if (!raw) return false;
+
+    const parsed = JSON.parse(raw);
+
+    // 旧フォーマットや最終アクセスから7日経過したデータは削除
+    if (!parsed || typeof parsed !== 'object' || !parsed.lastAccessed || !parsed.data) {
+      clearStorageData();
+      return false;
     }
+
+    const elapsed = Date.now() - parsed.lastAccessed;
+    if (elapsed > STORAGE_EXPIRY_MS) {
+      clearStorageData();
+      return false;
+    }
+
+    // 復元自体では再保存せず、最終アクセス日時のみ更新
+    setFormData(parsed.data, FORM_FIELDS, false);
+    parsed.lastAccessed = Date.now();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+
+    return true;
   } catch (e) {
     console.error(e);
+    clearStorageData();
   }
   return false;
 }
@@ -846,8 +891,10 @@ function loadSampleData(forceLang = null) {
     sender_email: senderEmail
   };
 
-  setFormData(sample);
-  showToast(isEn ? 'Random English sample data generated successfully.' : 'ランダムなサンプルデータを自動生成しました');
+  // サンプルデータ出力時はローカルストレージへの保存を控える
+  setFormData(sample, FORM_FIELDS, false);
+  isSampleLoaded = true;
+  showToast(isEn ? 'Random English sample data generated (not saved to local storage).' : 'ランダムなサンプルデータを自動生成しました（自動保存対象外）');
 }
 
 function hasFormUserContent() {
@@ -1009,12 +1056,6 @@ if (btnHelp && helpModal) {
   helpModal.addEventListener('click', () => {
     closeHelpModal();
   });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !helpModal.classList.contains('hidden')) {
-      closeHelpModal();
-    }
-  });
 }
 
 function downloadJsonFile(obj, filename) {
@@ -1116,9 +1157,10 @@ if (inputImportSender) {
 const btnResetForm = document.getElementById('btn-reset-form');
 if (btnResetForm) {
   btnResetForm.addEventListener('click', () => {
-    const confirmed = window.confirm('現在の入力内容をすべて消去します。よろしいですか？\n※この操作は取り消せません。');
+    const confirmed = window.confirm('現在の入力内容をすべて消去します。よろしいですか？\n※ブラウザに自動保存されたデータも完全に削除されます。');
     if (confirmed) {
-      localStorage.removeItem(STORAGE_KEY);
+      isExplicitResetOrLeave = true;
+      clearStorageData();
       location.reload();
     }
   });
@@ -1151,6 +1193,128 @@ if (btnPrint) {
     window.print();
   });
 }
+
+// ページ移動時の3択確認モーダル制御
+const leaveModal = document.getElementById('leave-modal');
+const leaveModalDialog = document.getElementById('leave-modal-dialog');
+const btnCloseLeaveTop = document.getElementById('btn-close-leave-top');
+const btnLeaveDelete = document.getElementById('btn-leave-delete');
+const btnLeaveKeep = document.getElementById('btn-leave-keep');
+const btnLeaveCancel = document.getElementById('btn-leave-cancel');
+
+function openLeaveModal(targetUrl) {
+  if (!leaveModal) return;
+  pendingNavigationUrl = targetUrl;
+  leaveModal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLeaveModal() {
+  if (!leaveModal) return;
+  pendingNavigationUrl = null;
+  leaveModal.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+if (leaveModal) {
+  if (leaveModalDialog) {
+    leaveModalDialog.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+
+  // 1. データを削除して移動
+  if (btnLeaveDelete) {
+    btnLeaveDelete.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dest = pendingNavigationUrl;
+      isExplicitResetOrLeave = true;
+      clearStorageData();
+      closeLeaveModal();
+      if (dest) {
+        window.location.href = dest;
+      }
+    });
+  }
+
+  // 2. データを残して移動
+  if (btnLeaveKeep) {
+    btnLeaveKeep.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const dest = pendingNavigationUrl;
+      isExplicitResetOrLeave = true;
+      if (!isSampleLoaded && hasFormUserContent()) {
+        saveToStorage(true);
+      }
+      closeLeaveModal();
+      if (dest) {
+        window.location.href = dest;
+      }
+    });
+  }
+
+  // 3. キャンセル（このページに留まる）
+  if (btnLeaveCancel) {
+    btnLeaveCancel.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLeaveModal();
+    });
+  }
+
+  if (btnCloseLeaveTop) {
+    btnCloseLeaveTop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeLeaveModal();
+    });
+  }
+
+  leaveModal.addEventListener('click', () => {
+    closeLeaveModal();
+  });
+}
+
+// Escキーで開いているモーダルを閉じる
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (helpModal && !helpModal.classList.contains('hidden')) {
+      closeHelpModal();
+    }
+    if (leaveModal && !leaveModal.classList.contains('hidden')) {
+      closeLeaveModal();
+    }
+  }
+});
+
+// ページ内リンク（<a>タグ）クリック時のインターセプト
+document.addEventListener('click', (e) => {
+  const anchor = e.target.closest('a[href]');
+  if (!anchor) return;
+
+  const href = anchor.getAttribute('href');
+  if (!href || href.startsWith('#') || href.startsWith('javascript:') || anchor.target === '_blank') {
+    return;
+  }
+
+  const hasSavedData = !!localStorage.getItem(STORAGE_KEY);
+  if (hasSavedData || hasFormUserContent()) {
+    e.preventDefault();
+    if (exportMenu) exportMenu.classList.add('hidden');
+    if (importMenu) importMenu.classList.add('hidden');
+    hideAllMobileTips();
+    openLeaveModal(anchor.href);
+  }
+});
+
+// ブラウザの戻る/進む、アドレスバーからの直接移動、タブを閉じる際の離脱警告
+window.addEventListener('beforeunload', (e) => {
+  if (isExplicitResetOrLeave) return;
+
+  const hasSavedData = !!localStorage.getItem(STORAGE_KEY);
+  if (hasSavedData || hasFormUserContent()) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // フォーム入力値変更のリアルタイム監視
 FORM_FIELDS.forEach(id => {
@@ -1187,7 +1351,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const hasStored = loadFromStorage();
   if (!hasStored) {
+    // 初回アクセス時はローカルストレージへの保存を控える
     updateUIState();
-    updatePreview();
+    updatePreview(false);
   }
 });
