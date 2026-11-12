@@ -894,7 +894,7 @@ function loadSampleData(forceLang = null) {
   // サンプルデータ出力時はローカルストレージへの保存を控える
   setFormData(sample, FORM_FIELDS, false);
   isSampleLoaded = true;
-  showToast(isEn ? 'Random English sample data generated (not saved to local storage).' : 'ランダムなサンプルデータを自動生成しました（自動保存対象外）');
+  showToast(isEn ? 'Random English sample data generated.' : 'ランダムなサンプルデータを自動生成しました');
 }
 
 function hasFormUserContent() {
