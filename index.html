@@ -651,7 +651,47 @@ https://www.gnu.org/licenses/gpl-3.0.html
 
     </div>
   </div>
+<!-- ページ移動時の3択確認モーダル -->
+  <div id="leave-modal" class="no-print hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs" style="padding: 1.25rem;">
+    <div id="leave-modal-dialog" class="bg-white rounded-xl border border-slate-200 shadow-xl w-full flex flex-col overflow-hidden" style="max-width: 420px; width: 100%;">
+      
+      <!-- モーダルヘッダー -->
+      <div class="flex items-center justify-between bg-amber-theme text-white shrink-0 gap-4" style="padding: 0.65rem 1.1rem;">
+        <div class="flex items-center space-x-2.5">
+          <svg class="w-5 h-5 text-amber-200 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+          <h2 class="text-sm sm:text-base font-bold tracking-tight">他のページへ移動しますか？</h2>
+        </div>
+        <button id="btn-close-leave-top" type="button" class="p-1.5 rounded-md text-amber-100 hover:text-white hover:bg-amber-dark transition shrink-0" title="閉じる">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+        </button>
+      </div>
 
+      <!-- モーダル本文 -->
+      <div class="text-xs sm:text-sm text-slate-700 leading-relaxed" style="padding: 1.35rem 1.5rem 1.1rem 1.5rem;">
+        <p style="margin-bottom: 0.85rem;">入力中のデータ（またはブラウザに保存済みのデータ）があります。移動前にデータをどう扱うか選択してください。</p>
+        <p class="text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg" style="padding: 0.7rem 0.9rem;">
+          ※「データを残して移動」を選ぶと、最終アクセスから<strong>7日間</strong>ブラウザ内に保持されます。
+        </p>
+      </div>
+
+      <!-- 3択アクションボタン -->
+      <div class="bg-slate-50 border-t border-slate-200 flex flex-col shrink-0" style="padding: 1.25rem 1.5rem 1.5rem 1.5rem; gap: 0.7rem;">
+        <button id="btn-leave-delete" type="button" class="w-full text-xs font-bold rounded-lg transition shadow-sm flex items-center justify-center" style="padding: 0.75rem 1rem; gap: 0.45rem; background-color: #e11d48; color: #ffffff;" onmouseover="this.style.backgroundColor='#be123c'" onmouseout="this.style.backgroundColor='#e11d48'">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>データを削除して移動する</span>
+        </button>
+        <button id="btn-leave-keep" type="button" class="w-full text-xs font-bold text-white bg-amber-theme hover:bg-amber-dark rounded-lg transition shadow-sm flex items-center justify-center" style="padding: 0.75rem 1rem; gap: 0.45rem;">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span>データを残して移動する</span>
+        </button>
+        <button id="btn-leave-cancel" type="button" class="w-full text-xs font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition" style="padding: 0.65rem 1rem; margin-top: 0.15rem;">
+          キャンセル（このページに留まる）
+        </button>
+      </div>
+
+    </div>
+  </div>
+  
   <script src="app.js"></script>
 </body>
 </html>
